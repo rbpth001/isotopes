@@ -1,6 +1,8 @@
 library(baseballr)
 library(tidyverse)
 
+
+#2022시즌 트리플A 게임 로그 정리
 x <- map_df(.x = seq.Date(as.Date('2022-04-01'), 
                            as.Date('2022-10-01'), 
                            'day'), 
@@ -8,9 +10,11 @@ x <- map_df(.x = seq.Date(as.Date('2022-04-01'),
                                level_ids = c(11))
 )
 
+#isotopes 경기만 수집
 isotopes <- x %>%
   filter(teams.away.team.name == 'Albuquerque Isotopes' | teams.home.team.name == 'Albuquerque Isotopes')
-  
+
+#play-by-play 수집
 safe_milb <- safely(get_pbp_mlb)
 
 df <- map(.x = isotopes %>%
@@ -19,3 +23,25 @@ df <- map(.x = isotopes %>%
            ~safe_milb(game_pk = .x)) %>%
      map('result') %>%
      bind_rows()
+     
+
+# Sean Bouchard Batting Data 수집
+bouchard <- df %>%
+ filter(matchup.batter.fullName == 'Sean Bouchard')
+ 
+# Sean Bouchard Exit Velocity, Launch Angle, Hard Hit 데이터 수집
+bouchard_inplay <- bouchard %>%
+ filter(!is.na(hitData.trajectory), count = n())
+
+bouchard_inplay %>%
+  filter(!is.na(hitData.launchSpeed)) %>%
+  summarize(launchspeed = mean(hitData.launchSpeed))
+  
+bouchard_inplay %>%
+ filter(!is.na(hitData.launchAngle)) %>%
+ summarize(launchangle = mean(hitData.launchAngle))  
+ 
+bouchard_inplay %>%
+ filter(!is.na(hitData.launchSpeed) & hitData.launchSpeed >= 95) %>%
+ summarize(count = n())
+ 
