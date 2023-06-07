@@ -57,7 +57,7 @@ bouchard <- df %>%
  
 # Sean Bouchard Exit Velocity, Launch Angle, Hard Hit 데이터 수집
 bouchard_inplay <- bouchard %>%
- filter(!is.na(hitData.trajectory), count = n())
+ filter(!is.na(hitData.trajectory))
 
 bouchard_inplay %>%
   filter(!is.na(hitData.launchSpeed)) %>%
@@ -70,4 +70,24 @@ bouchard_inplay %>%
 bouchard_inplay %>%
  filter(!is.na(hitData.launchSpeed) & hitData.launchSpeed >= 95) %>%
  summarize(count = n())
+ 
+#Brenton Doyle Data 가져오기
+doyle <- baseballr::milb_batter_game_logs_fg(25479, year = 2022)
+doyle_dates <- doyle %>%
+ pull(Date)
+doyle_gk <- map_df(.x = doyle_dates,
+                   ~get_game_pks_mlb(date = .x, 
+                                      level_ids = c(11))
+)
+
+doyle_gk_COL <- doyle_gk %>%
+     filter(teams.home.team.name == "Albuquerque Isotopes")
+ 
+doyle_data <- map(.x = doyle_gk_COL %>%
+                      filter(status.codedGameState == "F") %>% 
+                      pull(game_pk), 
+                  ~safe_milb(game_pk = .x)) %>%
+     map('result') %>%
+     bind_rows()
+
  
