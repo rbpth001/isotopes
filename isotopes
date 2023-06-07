@@ -10,6 +10,15 @@ x <- map_df(.x = seq.Date(as.Date('2022-04-01'),
                                level_ids = c(11))
 )
 
+#2022시즌 더블A 게임 로그 정리
+x <- map_df(.x = seq.Date(as.Date('2022-04-01'), 
+                           as.Date('2022-10-01'), 
+                           'day'), 
+             ~get_game_pks_mlb(date = .x, 
+                               level_ids = c(12))
+ )
+ 
+
 #isotopes 경기만 수집
 isotopes <- x %>%
   filter(teams.away.team.name == 'Albuquerque Isotopes' | teams.home.team.name == 'Albuquerque Isotopes')
@@ -23,6 +32,23 @@ df <- map(.x = isotopes %>%
            ~safe_milb(game_pk = .x)) %>%
      map('result') %>%
      bind_rows()
+
+#yard goats 경기만 수집
+yard_goats <- x %>%
+     filter(teams.away.team.name == 'Hartford Yard Goats' | teams.home.team.name == 'Hartford Yard Goats')
+ 
+#play-by-play 수집
+safe_milb <- safely(get_pbp_mlb)
+ 
+df <- map(.x = yard_goats %>%
+               filter(status.codedGameState == "F") %>% 
+               pull(game_pk), 
+           ~safe_milb(game_pk = .x)) %>%
+     map('result') %>%
+     bind_rows()
+
+
+
      
 
 # Sean Bouchard Batting Data 수집
